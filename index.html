@@ -7,11 +7,11 @@
 <title>Dental SaaS</title>
 
 <!-- PWA -->
-<link rel="manifest" href="/manifest.json">
-<link rel="icon" href="/icon.png">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icon.png">
 <meta name="theme-color" content="#0f172a">
 
-<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="./style.css">
 
 <style>
 body {
@@ -56,7 +56,7 @@ button:hover { opacity: 0.9; }
 
 <body>
 
-<!-- LOADING (prevents blank screen confusion) -->
+<!-- LOADING -->
 <div id="loading">Loading app...</div>
 
 <!-- AUTH -->
@@ -78,12 +78,14 @@ button:hover { opacity: 0.9; }
     <button onclick="logout()">Logout</button>
   </div>
 
+  <!-- STATS -->
   <div class="card">
     <h3>Stats</h3>
     <div id="statPatients">0</div>
     <div id="statAppointments">0</div>
   </div>
 
+  <!-- PATIENTS -->
   <div class="card">
     <h3>Patients</h3>
 
@@ -93,6 +95,7 @@ button:hover { opacity: 0.9; }
     <ul id="patientList"></ul>
   </div>
 
+  <!-- APPOINTMENTS -->
   <div class="card">
     <h3>Appointments</h3>
     <ul id="appointmentsList"></ul>
@@ -100,9 +103,10 @@ button:hover { opacity: 0.9; }
 
 </div>
 
-<script type="module" src="/app.js"></script>
+<!-- APP SCRIPT -->
+<script type="module" src="./app.js"></script>
 
-<!-- SAFE ERROR LOGGER -->
+<!-- ERROR LOGGER -->
 <script>
 window.addEventListener("error", (e) => {
   console.error("App error:", e.message);
