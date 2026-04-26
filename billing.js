@@ -2,7 +2,9 @@ import { supabase } from "./supabase.js";
 
 export async function startSubscription() {
   try {
-    // ✅ Get session (needed for Edge Function auth)
+    // =========================
+    // GET AUTH SESSION
+    // =========================
     const { data: sessionData } = await supabase.auth.getSession();
 
     const token = sessionData?.session?.access_token;
@@ -12,13 +14,27 @@ export async function startSubscription() {
       return;
     }
 
-    // ⚠️ safer clinicId handling
-    const clinicId = localStorage.getItem("clinicId");
+    // =========================
+    // GET CLINIC (SAFE METHOD)
+    // =========================
+    const { data: clinicData, error: clinicError } = await supabase
+      .from("clinics")
+      .select("id")
+      .eq("owner_id", sessionData.session.user.id)
+      .maybeSingle();
 
-    if (!clinicId) {
+    if (clinicError || !clinicData) {
       alert("Clinic not found. Please refresh.");
       return;
     }
+
+    const clinicId = clinicData.id;
+
+    // =========================
+    // TIMEOUT WRAPPER
+    // =========================
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
 
     const res = await fetch(
       "https://gzoodfxfpztfmbybxina.supabase.co/functions/v1/create-checkout",
@@ -29,16 +45,27 @@ export async function startSubscription() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ clinicId }),
+        signal: controller.signal,
       }
     );
 
-    // ✅ handle server errors properly
-    if (!res.ok) {
-      const errText = await res.text();
-      throw new Error(errText || "Checkout failed");
+    clearTimeout(timeout);
+
+    // =========================
+    // SAFE ERROR HANDLING
+    // =========================
+    let data;
+
+    try {
+      data = await res.json();
+    } catch {
+      const text = await res.text();
+      throw new Error(text || "Invalid server response");
     }
 
-    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data?.message || "Checkout failed");
+    }
 
     if (data?.url) {
       window.location.href = data.url;
@@ -48,6 +75,12 @@ export async function startSubscription() {
 
   } catch (err) {
     console.error("Billing error:", err);
+
+    if (err.name === "AbortError") {
+      alert("Request timed out. Please try again.");
+      return;
+    }
+
     alert(err.message || "Payment failed");
   }
 }
