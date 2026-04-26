@@ -1,20 +1,40 @@
 export const CONFIG = {
   appName: "Dental SaaS Pro",
 
-  // Core architecture
+  // =========================
+  // ARCHITECTURE
+  // =========================
   multiTenant: true,
+  requireSubscription: true,
+  autoCreateClinic: true,
 
-  // Payments
+  // =========================
+  // PAYMENTS
+  // =========================
   stripeEnabled: true,
 
-  // API / stability flags (IMPORTANT for debugging)
+  // =========================
+  // ENVIRONMENT CONTROL
+  // =========================
+  environment: "production", // "development" | "production"
   debug: false,
   strictMode: true,
 
-  // Safety defaults (prevents runtime crashes)
-  autoCreateClinic: true,
-  requireSubscription: true,
-
-  // UI behavior
+  // =========================
+  // UI BEHAVIOR
+  // =========================
   showToasts: true,
+  showErrorsToUser: false,
+
+  // =========================
+  // SAFETY FLAGS (IMPORTANT)
+  // =========================
+  allowPublicAccess: false,
+  enforceRLS: true,
+
+  // =========================
+  // PERFORMANCE
+  // =========================
+  cacheEnabled: true,
+  autoRetryRequests: true,
 };
