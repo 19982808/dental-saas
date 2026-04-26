@@ -4,16 +4,21 @@ import { startSubscription } from "./billing.js";
 /* =========================
    GLOBAL STATE
 ========================= */
-
 let clinicId = null;
 let currentUser = null;
 let chartInstance = null;
 let userRole = "staff";
 
 /* =========================
+   START APP SAFELY
+========================= */
+document.addEventListener("DOMContentLoaded", () => {
+  boot();
+});
+
+/* =========================
    BOOT APP
 ========================= */
-
 async function boot() {
   try {
     const { data, error } = await supabase.auth.getSession();
@@ -25,12 +30,19 @@ async function boot() {
 
     await initClinic();
     await loadRole();
-    await checkSubscription();
 
-    document.getElementById("authBox").style.display = "none";
-    showSection("dashboard");
+    const isActive = await checkSubscription();
+    if (!isActive) return;
+
+    // SAFE UI SWITCH
+    const authBox = document.getElementById("authBox");
+    const dashboard = document.getElementById("dashboard");
+
+    if (authBox) authBox.style.display = "none";
+    if (dashboard) dashboard.classList.remove("hidden");
 
     await loadAll();
+
     notify("Welcome back 👋");
 
   } catch (err) {
@@ -39,17 +51,17 @@ async function boot() {
   }
 }
 
-boot();
-
 /* =========================
    AUTH
 ========================= */
-
 window.login = async () => {
   try {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
     const { error } = await supabase.auth.signInWithPassword({
-      email: email.value,
-      password: password.value,
+      email,
+      password,
     });
 
     if (error) throw error;
@@ -63,9 +75,12 @@ window.login = async () => {
 
 window.register = async () => {
   try {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
     const { error } = await supabase.auth.signUp({
-      email: email.value,
-      password: password.value,
+      email,
+      password,
     });
 
     if (error) throw error;
@@ -85,9 +100,8 @@ window.logout = async () => {
 /* =========================
    CLINIC INIT
 ========================= */
-
 async function initClinic() {
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from("clinics")
     .select("*")
     .eq("owner_id", currentUser.id)
@@ -98,13 +112,13 @@ async function initClinic() {
     return;
   }
 
-  const { data: newClinic, error: insertError } = await supabase
+  const { data: newClinic, error } = await supabase
     .from("clinics")
     .insert([{ name: "My Clinic", owner_id: currentUser.id }])
     .select()
     .single();
 
-  if (insertError) throw insertError;
+  if (error) throw error;
 
   clinicId = newClinic.id;
 }
@@ -112,17 +126,14 @@ async function initClinic() {
 /* =========================
    ROLE SYSTEM
 ========================= */
-
 async function loadRole() {
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from("profiles")
     .select("role")
     .eq("id", currentUser.id)
     .single();
 
-  if (!error && data) {
-    userRole = data.role || "staff";
-  }
+  if (data) userRole = data.role || "staff";
 
   applyRoleUI();
 }
@@ -136,9 +147,8 @@ function applyRoleUI() {
 }
 
 /* =========================
-   PAYWALL
+   PAYWALL (SAFE)
 ========================= */
-
 async function checkSubscription() {
   const { data } = await supabase
     .from("clinics")
@@ -147,32 +157,27 @@ async function checkSubscription() {
     .single();
 
   if (!data || data.subscription_status !== "active") {
-    document.body.innerHTML = `
-      <div style="text-align:center;margin-top:100px;color:white;">
-        <h1>🚫 Subscription Required</h1>
-        <button onclick="openBilling()">Upgrade</button>
-      </div>
-    `;
+    const dashboard = document.getElementById("dashboard");
+
+    if (dashboard) {
+      dashboard.classList.remove("hidden");
+      dashboard.innerHTML = `
+        <div style="text-align:center;margin-top:100px;">
+          <h1>🚫 Subscription Required</h1>
+          <button onclick="openBilling()">Upgrade</button>
+        </div>
+      `;
+    }
+
+    return false;
   }
+
+  return true;
 }
-
-/* =========================
-   NAVIGATION
-========================= */
-
-window.showSection = (id) => {
-  document.querySelectorAll(".section").forEach(s => {
-    s.style.display = "none";
-  });
-
-  const el = document.getElementById(id);
-  if (el) el.style.display = "block";
-};
 
 /* =========================
    LOAD ALL DATA
 ========================= */
-
 async function loadAll() {
   await Promise.all([
     loadPatients(),
@@ -185,9 +190,9 @@ async function loadAll() {
 /* =========================
    PATIENTS
 ========================= */
-
 window.addPatient = async () => {
-  const name = patientName.value;
+  const input = document.getElementById("patientName");
+  const name = input.value;
 
   if (!name) return notify("Enter patient name");
 
@@ -197,7 +202,7 @@ window.addPatient = async () => {
 
   if (error) return notify(error.message);
 
-  patientName.value = "";
+  input.value = "";
 
   notify("Patient added");
 
@@ -215,7 +220,10 @@ async function loadPatients() {
 
   if (error) return notify(error.message);
 
-  patientList.innerHTML = "";
+  const list = document.getElementById("patientList");
+  if (!list) return;
+
+  list.innerHTML = "";
 
   data.forEach(p => {
     const li = document.createElement("li");
@@ -223,7 +231,7 @@ async function loadPatients() {
       ${p.name}
       <button onclick="deletePatient('${p.id}')">Delete</button>
     `;
-    patientList.appendChild(li);
+    list.appendChild(li);
   });
 }
 
@@ -236,23 +244,6 @@ window.deletePatient = async (id) => {
 /* =========================
    APPOINTMENTS
 ========================= */
-
-window.addAppointment = async () => {
-  const name = prompt("Patient name:");
-  const date = prompt("Date (YYYY-MM-DD HH:MM)");
-
-  if (!name || !date) return;
-
-  const { error } = await supabase.from("appointments").insert([
-    { patient_name: name, date, clinic_id: clinicId }
-  ]);
-
-  if (error) return notify(error.message);
-
-  notify("Appointment added");
-  loadAppointments();
-};
-
 async function loadAppointments() {
   const { data } = await supabase
     .from("appointments")
@@ -260,10 +251,13 @@ async function loadAppointments() {
     .eq("clinic_id", clinicId)
     .order("date", { ascending: true });
 
-  appointmentsList.innerHTML = "";
+  const list = document.getElementById("appointmentsList");
+  if (!list) return;
+
+  list.innerHTML = "";
 
   data.forEach(a => {
-    appointmentsList.innerHTML += `
+    list.innerHTML += `
       <li>${a.patient_name} - ${new Date(a.date).toLocaleString()}</li>
     `;
   });
@@ -272,19 +266,20 @@ async function loadAppointments() {
 /* =========================
    STATS
 ========================= */
-
 async function loadStats() {
   const { data: patients } = await supabase.from("patients").select("*");
   const { data: appointments } = await supabase.from("appointments").select("*");
 
-  statPatients.innerHTML = `<h3>${patients?.length || 0}</h3><p>Patients</p>`;
-  statAppointments.innerHTML = `<h3>${appointments?.length || 0}</h3><p>Appointments</p>`;
+  const p = document.getElementById("statPatients");
+  const a = document.getElementById("statAppointments");
+
+  if (p) p.innerHTML = `<h3>${patients?.length || 0}</h3><p>Patients</p>`;
+  if (a) a.innerHTML = `<h3>${appointments?.length || 0}</h3><p>Appointments</p>`;
 }
 
 /* =========================
-   ANALYTICS (CHART)
+   ANALYTICS (SAFE)
 ========================= */
-
 async function loadAnalytics() {
   const { data } = await supabase
     .from("patients")
@@ -293,14 +288,13 @@ async function loadAnalytics() {
 
   const counts = {};
 
-  data.forEach(p => {
+  data?.forEach(p => {
     const d = new Date(p.created_at).toLocaleDateString();
     counts[d] = (counts[d] || 0) + 1;
   });
 
   const ctx = document.getElementById("chart");
-
-  if (!ctx) return;
+  if (!ctx || typeof Chart === "undefined") return;
 
   if (chartInstance) chartInstance.destroy();
 
@@ -319,7 +313,6 @@ async function loadAnalytics() {
 /* =========================
    NOTIFICATIONS
 ========================= */
-
 function notify(msg) {
   const box = document.createElement("div");
   box.className = "toast";
@@ -333,13 +326,11 @@ function notify(msg) {
 /* =========================
    BILLING
 ========================= */
-
 window.openBilling = () => startSubscription();
 
 /* =========================
    SESSION LISTENER
 ========================= */
-
 supabase.auth.onAuthStateChange((event, session) => {
   if (session) boot();
 });
@@ -347,7 +338,6 @@ supabase.auth.onAuthStateChange((event, session) => {
 /* =========================
    PWA
 ========================= */
-
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("/sw.js");
 }
