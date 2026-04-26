@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dental SaaS</title>
 
+<!-- ✅ PWA FIX -->
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icon.png">
+<meta name="theme-color" content="#0f172a">
+
 <style>
 body {
   font-family: Arial;
@@ -12,18 +17,25 @@ body {
   color: white;
   padding: 20px;
 }
+
 .card {
   background: #1e293b;
   padding: 20px;
   border-radius: 10px;
   margin-bottom: 20px;
 }
+
 input, button {
   padding: 10px;
   margin: 5px 0;
   width: 100%;
 }
+
 button { cursor: pointer; }
+
+.hidden {
+  display: none;
+}
 </style>
 </head>
 
@@ -41,7 +53,7 @@ button { cursor: pointer; }
 </div>
 
 <!-- DASHBOARD -->
-<div id="dashboard" style="display:none;">
+<div id="dashboard" class="hidden">
 
   <div class="card">
     <h2>Dashboard</h2>
@@ -51,8 +63,8 @@ button { cursor: pointer; }
   <!-- STATS -->
   <div class="card">
     <h3>Stats</h3>
-    <div id="statPatients"></div>
-    <div id="statAppointments"></div>
+    <div id="statPatients">0</div>
+    <div id="statAppointments">0</div>
   </div>
 
   <!-- PATIENTS -->
@@ -73,6 +85,8 @@ button { cursor: pointer; }
 
 </div>
 
-<script type="module" src="./app.js"></script>
+<!-- ✅ FIXED PATH FOR VERCEL -->
+<script type="module" src="/app.js"></script>
+
 </body>
 </html>
