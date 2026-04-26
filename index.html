@@ -5,19 +5,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dental SaaS</title>
 
-<!-- ✅ PWA FIX -->
+<!-- =========================
+     PWA + ICONS (FIXED)
+========================= -->
 <link rel="manifest" href="/manifest.json">
-<link rel="icon" href="/icon.png">
+<link rel="icon" href="/icon.png" type="image/png">
+<link rel="apple-touch-icon" href="/icon.png">
 <meta name="theme-color" content="#0f172a">
 
+<!-- =========================
+     BASIC STYLES
+========================= -->
 <style>
 body {
-  font-family: Arial;
+  font-family: Arial, sans-serif;
   background: #0f172a;
   color: white;
   padding: 20px;
+  margin: 0;
 }
 
+/* CARD */
 .card {
   background: #1e293b;
   padding: 20px;
@@ -25,23 +33,38 @@ body {
   margin-bottom: 20px;
 }
 
+/* INPUTS */
 input, button {
   padding: 10px;
   margin: 5px 0;
   width: 100%;
+  box-sizing: border-box;
+  border-radius: 6px;
+  border: none;
 }
 
-button { cursor: pointer; }
+/* BUTTON */
+button {
+  cursor: pointer;
+}
 
+/* STATE */
 .hidden {
   display: none;
+}
+
+/* SMALL UX IMPROVEMENT */
+button:hover {
+  opacity: 0.9;
 }
 </style>
 </head>
 
 <body>
 
-<!-- AUTH -->
+<!-- =========================
+     AUTH
+========================= -->
 <div id="authBox" class="card">
   <h2>Login / Register</h2>
 
@@ -52,7 +75,9 @@ button { cursor: pointer; }
   <button onclick="register()">Register</button>
 </div>
 
-<!-- DASHBOARD -->
+<!-- =========================
+     DASHBOARD
+========================= -->
 <div id="dashboard" class="hidden">
 
   <div class="card">
@@ -85,8 +110,19 @@ button { cursor: pointer; }
 
 </div>
 
-<!-- ✅ FIXED PATH FOR VERCEL -->
+<!-- =========================
+     APP SCRIPT
+========================= -->
 <script type="module" src="/app.js"></script>
+
+<!-- =========================
+     SAFETY FALLBACK (prevents blank crash)
+========================= -->
+<script>
+window.addEventListener("error", function (e) {
+  console.error("App error:", e.message);
+});
+</script>
 
 </body>
 </html>
