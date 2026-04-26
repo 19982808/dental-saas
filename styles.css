@@ -1,0 +1,96 @@
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #0f172a;
+  color: white;
+  display: flex;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 220px;
+  height: 100vh;
+  padding: 20px;
+  background: rgba(255,255,255,0.05);
+}
+
+.sidebar button {
+  display: block;
+  width: 100%;
+  margin-bottom: 10px;
+  background: transparent;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+/* MAIN */
+.main {
+  flex: 1;
+  padding: 30px;
+}
+
+/* CARD */
+.card {
+  background: rgba(255,255,255,0.05);
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+}
+
+.center {
+  text-align: center;
+}
+
+/* INPUT */
+input {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+}
+
+/* BUTTON */
+button {
+  padding: 10px;
+  cursor: pointer;
+}
+
+.primary {
+  background: #22c55e;
+  color: white;
+}
+
+/* GRID */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2,1fr);
+  gap: 20px;
+}
+
+.stat-card {
+  background: rgba(255,255,255,0.05);
+  padding: 20px;
+  border-radius: 10px;
+}
+
+/* LIST */
+li {
+  margin-top: 10px;
+  padding: 10px;
+  background: rgba(255,255,255,0.05);
+}
+
+/* HIDDEN */
+.hidden {
+  display: none;
+}
+
+/* TOAST */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #22c55e;
+  padding: 12px;
+  border-radius: 8px;
+}

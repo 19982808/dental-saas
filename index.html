@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dental SaaS Pro</title>
+
+  <link rel="stylesheet" href="styles.css">
+  <link rel="manifest" href="manifest.json">
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <h2>🦷 DentalPro</h2>
+  <button onclick="showSection('dashboard')">Dashboard</button>
+  <button onclick="showSection('patients')">Patients</button>
+  <button onclick="showSection('appointments')">Appointments</button>
+  <button onclick="showSection('billing')">Billing</button>
+  <button onclick="logout()">Logout</button>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- AUTH -->
+  <div id="authBox" class="card center">
+    <h2>Welcome</h2>
+    <input id="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Password">
+    <button class="primary" onclick="login()">Login</button>
+    <button onclick="register()">Register</button>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard" class="section hidden">
+    <div class="grid">
+      <div class="stat-card" id="statPatients"></div>
+      <div class="stat-card" id="statAppointments"></div>
+    </div>
+
+    <div class="card">
+      <canvas id="chart"></canvas>
+    </div>
+  </div>
+
+  <!-- PATIENTS -->
+  <div id="patients" class="section hidden">
+    <div class="card">
+      <h3>Patients</h3>
+      <input id="patientName" placeholder="Patient name">
+      <button class="primary" onclick="addPatient()">Add</button>
+      <ul id="patientList"></ul>
+    </div>
+  </div>
+
+  <!-- APPOINTMENTS -->
+  <div id="appointments" class="section hidden">
+    <div class="card">
+      <h3>Appointments</h3>
+      <button onclick="addAppointment()">Add Appointment</button>
+      <ul id="appointmentsList"></ul>
+    </div>
+  </div>
+
+  <!-- BILLING -->
+  <div id="billing" class="section hidden">
+    <div class="card center">
+      <h2>Upgrade Plan</h2>
+      <button class="primary" onclick="openBilling()">Upgrade</button>
+    </div>
+  </div>
+
+</div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
