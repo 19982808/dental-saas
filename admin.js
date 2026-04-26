@@ -1,9 +1,17 @@
 import { supabase } from "./supabase.js";
 
 /* =========================
+   ADMIN STATE GUARD
+========================= */
+let isLoading = false;
+
+/* =========================
    LOAD ADMIN PANEL
 ========================= */
 window.loadAdmin = async function () {
+  if (isLoading) return;
+  isLoading = true;
+
   try {
     const adminPanel = document.getElementById("adminPanel");
 
@@ -12,9 +20,12 @@ window.loadAdmin = async function () {
       return;
     }
 
+    adminPanel.innerHTML = "<p>Loading clinics...</p>";
+
     const { data, error } = await supabase
       .from("clinics")
-      .select("*");
+      .select("*")
+      .order("created_at", { ascending: false });
 
     if (error) throw error;
 
@@ -28,7 +39,7 @@ window.loadAdmin = async function () {
         (c) => `
         <div class="card">
           <h3>🏥 ${c.name}</h3>
-          <p>Status: <b>${c.subscription_status}</b></p>
+          <p>Status: <b>${c.subscription_status || "unknown"}</b></p>
           <p>Owner: ${c.owner_id}</p>
 
           <button onclick="activateClinic('${c.id}')">Activate</button>
@@ -41,6 +52,8 @@ window.loadAdmin = async function () {
   } catch (err) {
     console.error(err);
     alert("Failed to load admin panel: " + err.message);
+  } finally {
+    isLoading = false;
   }
 };
 
@@ -56,7 +69,7 @@ window.activateClinic = async function (id) {
 
     if (error) throw error;
 
-    loadAdmin();
+    await loadAdmin();
 
   } catch (err) {
     alert("Activation failed: " + err.message);
@@ -75,7 +88,7 @@ window.deactivateClinic = async function (id) {
 
     if (error) throw error;
 
-    loadAdmin();
+    await loadAdmin();
 
   } catch (err) {
     alert("Deactivation failed: " + err.message);
