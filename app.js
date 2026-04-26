@@ -2,94 +2,103 @@ import { supabase } from "./supabase.js";
 import { startSubscription } from "./billing.js";
 
 /* =========================
-   GLOBAL STATE
+   STATE
 ========================= */
 let clinicId = null;
 let currentUser = null;
 let chartInstance = null;
 let userRole = "staff";
+let isBooting = false;
 
 /* =========================
-   START APP SAFELY
+   INIT
 ========================= */
-document.addEventListener("DOMContentLoaded", () => {
-  boot();
-});
+document.addEventListener("DOMContentLoaded", boot);
 
 /* =========================
-   BOOT APP
+   BOOT (FIXED - NO LOOPS)
 ========================= */
 async function boot() {
-  try {
-    const { data, error } = await supabase.auth.getSession();
-    if (error) throw error;
+  if (isBooting) return;
+  isBooting = true;
 
-    if (!data.session) return;
+  try {
+    const { data } = await supabase.auth.getSession();
+
+    if (!data.session) {
+      showAuth();
+      return;
+    }
 
     currentUser = data.session.user;
 
     await initClinic();
     await loadRole();
 
-    const isActive = await checkSubscription();
-    if (!isActive) return;
+    const active = await checkSubscription();
+    if (!active) return;
 
-    // SAFE UI SWITCH
-    const authBox = document.getElementById("authBox");
-    const dashboard = document.getElementById("dashboard");
-
-    if (authBox) authBox.style.display = "none";
-    if (dashboard) dashboard.classList.remove("hidden");
-
+    showDashboard();
     await loadAll();
 
     notify("Welcome back 👋");
 
   } catch (err) {
     console.error(err);
-    alert("App failed to start: " + err.message);
+    alert(err.message);
+  } finally {
+    isBooting = false;
   }
+}
+
+/* =========================
+   UI SAFE TOGGLES
+========================= */
+function showDashboard() {
+  const authBox = document.getElementById("authBox");
+  const dashboard = document.getElementById("dashboard");
+
+  if (authBox) authBox.style.display = "none";
+  if (dashboard) dashboard.classList.remove("hidden");
+}
+
+function showAuth() {
+  const authBox = document.getElementById("authBox");
+  const dashboard = document.getElementById("dashboard");
+
+  if (authBox) authBox.style.display = "block";
+  if (dashboard) dashboard.classList.add("hidden");
 }
 
 /* =========================
    AUTH
 ========================= */
 window.login = async () => {
-  try {
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
 
-    if (error) throw error;
+  if (error) return alert(error.message);
 
-    boot();
-
-  } catch (err) {
-    alert(err.message);
-  }
+  boot();
 };
 
 window.register = async () => {
-  try {
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
 
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
+  const { error } = await supabase.auth.signUp({
+    email,
+    password,
+  });
 
-    if (error) throw error;
+  if (error) return alert(error.message);
 
-    alert("Check your email to confirm account");
-
-  } catch (err) {
-    alert(err.message);
-  }
+  alert("Check your email to confirm account");
 };
 
 window.logout = async () => {
@@ -98,14 +107,14 @@ window.logout = async () => {
 };
 
 /* =========================
-   CLINIC INIT
+   CLINIC INIT (SAFE SINGLE)
 ========================= */
 async function initClinic() {
   const { data } = await supabase
     .from("clinics")
     .select("*")
     .eq("owner_id", currentUser.id)
-    .single();
+    .maybeSingle();
 
   if (data) {
     clinicId = data.id;
@@ -124,30 +133,20 @@ async function initClinic() {
 }
 
 /* =========================
-   ROLE SYSTEM
+   ROLE
 ========================= */
 async function loadRole() {
   const { data } = await supabase
     .from("profiles")
     .select("role")
     .eq("id", currentUser.id)
-    .single();
+    .maybeSingle();
 
-  if (data) userRole = data.role || "staff";
-
-  applyRoleUI();
-}
-
-function applyRoleUI() {
-  if (userRole !== "admin") {
-    document.querySelectorAll(".admin-only").forEach(el => {
-      el.style.display = "none";
-    });
-  }
+  userRole = data?.role || "staff";
 }
 
 /* =========================
-   PAYWALL (SAFE)
+   SUBSCRIPTION (FIXED UI)
 ========================= */
 async function checkSubscription() {
   const { data } = await supabase
@@ -156,34 +155,30 @@ async function checkSubscription() {
     .eq("id", clinicId)
     .single();
 
-  if (!data || data.subscription_status !== "active") {
-    const dashboard = document.getElementById("dashboard");
+  if (data?.subscription_status === "active") return true;
 
-    if (dashboard) {
-      dashboard.classList.remove("hidden");
-      dashboard.innerHTML = `
-        <div style="text-align:center;margin-top:100px;">
-          <h1>🚫 Subscription Required</h1>
-          <button onclick="openBilling()">Upgrade</button>
-        </div>
-      `;
-    }
+  const dashboard = document.getElementById("dashboard");
 
-    return false;
+  if (dashboard) {
+    dashboard.innerHTML = `
+      <div style="text-align:center;margin-top:100px;">
+        <h1>🚫 Subscription Required</h1>
+        <button onclick="openBilling()">Upgrade</button>
+      </div>
+    `;
   }
 
-  return true;
+  return false;
 }
 
 /* =========================
-   LOAD ALL DATA
+   LOAD ALL
 ========================= */
 async function loadAll() {
   await Promise.all([
     loadPatients(),
     loadAppointments(),
-    loadStats(),
-    loadAnalytics()
+    loadStats()
   ]);
 }
 
@@ -204,28 +199,23 @@ window.addPatient = async () => {
 
   input.value = "";
 
-  notify("Patient added");
-
   loadPatients();
   loadStats();
-  loadAnalytics();
 };
 
 async function loadPatients() {
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from("patients")
     .select("*")
     .eq("clinic_id", clinicId)
     .order("created_at", { ascending: false });
-
-  if (error) return notify(error.message);
 
   const list = document.getElementById("patientList");
   if (!list) return;
 
   list.innerHTML = "";
 
-  data.forEach(p => {
+  data?.forEach(p => {
     const li = document.createElement("li");
     li.innerHTML = `
       ${p.name}
@@ -237,8 +227,8 @@ async function loadPatients() {
 
 window.deletePatient = async (id) => {
   await supabase.from("patients").delete().eq("id", id);
-  notify("Patient removed");
   loadPatients();
+  loadStats();
 };
 
 /* =========================
@@ -248,75 +238,51 @@ async function loadAppointments() {
   const { data } = await supabase
     .from("appointments")
     .select("*")
-    .eq("clinic_id", clinicId)
-    .order("date", { ascending: true });
+    .eq("clinic_id", clinicId);
 
   const list = document.getElementById("appointmentsList");
   if (!list) return;
 
   list.innerHTML = "";
 
-  data.forEach(a => {
-    list.innerHTML += `
-      <li>${a.patient_name} - ${new Date(a.date).toLocaleString()}</li>
-    `;
+  data?.forEach(a => {
+    list.innerHTML += `<li>${a.patient_name}</li>`;
   });
 }
 
 /* =========================
-   STATS
+   STATS (FIXED SCOPING)
 ========================= */
 async function loadStats() {
-  const { data: patients } = await supabase.from("patients").select("*");
-  const { data: appointments } = await supabase.from("appointments").select("*");
+  const { data: patients } = await supabase
+    .from("patients")
+    .select("*")
+    .eq("clinic_id", clinicId);
+
+  const { data: appointments } = await supabase
+    .from("appointments")
+    .select("*")
+    .eq("clinic_id", clinicId);
 
   const p = document.getElementById("statPatients");
   const a = document.getElementById("statAppointments");
 
-  if (p) p.innerHTML = `<h3>${patients?.length || 0}</h3><p>Patients</p>`;
-  if (a) a.innerHTML = `<h3>${appointments?.length || 0}</h3><p>Appointments</p>`;
+  if (p) p.textContent = patients?.length || 0;
+  if (a) a.textContent = appointments?.length || 0;
 }
 
 /* =========================
-   ANALYTICS (SAFE)
-========================= */
-async function loadAnalytics() {
-  const { data } = await supabase
-    .from("patients")
-    .select("created_at")
-    .eq("clinic_id", clinicId);
-
-  const counts = {};
-
-  data?.forEach(p => {
-    const d = new Date(p.created_at).toLocaleDateString();
-    counts[d] = (counts[d] || 0) + 1;
-  });
-
-  const ctx = document.getElementById("chart");
-  if (!ctx || typeof Chart === "undefined") return;
-
-  if (chartInstance) chartInstance.destroy();
-
-  chartInstance = new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: Object.keys(counts),
-      datasets: [{
-        label: "Patients Growth",
-        data: Object.values(counts)
-      }]
-    }
-  });
-}
-
-/* =========================
-   NOTIFICATIONS
+   NOTIFY
 ========================= */
 function notify(msg) {
   const box = document.createElement("div");
-  box.className = "toast";
   box.innerText = msg;
+  box.style.position = "fixed";
+  box.style.bottom = "20px";
+  box.style.right = "20px";
+  box.style.background = "#22c55e";
+  box.style.padding = "10px";
+  box.style.borderRadius = "8px";
 
   document.body.appendChild(box);
 
@@ -329,10 +295,10 @@ function notify(msg) {
 window.openBilling = () => startSubscription();
 
 /* =========================
-   SESSION LISTENER
+   AUTH LISTENER (FIXED LOOP)
 ========================= */
-supabase.auth.onAuthStateChange((event, session) => {
-  if (session) boot();
+supabase.auth.onAuthStateChange((event) => {
+  if (event === "SIGNED_IN") boot();
 });
 
 /* =========================
