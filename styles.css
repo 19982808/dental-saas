@@ -1,9 +1,10 @@
 body {
   margin: 0;
-  font-family: Arial;
+  font-family: Arial, sans-serif;
   background: #0f172a;
   color: white;
   display: flex;
+  min-height: 100vh;
 }
 
 /* SIDEBAR */
@@ -12,6 +13,8 @@ body {
   height: 100vh;
   padding: 20px;
   background: rgba(255,255,255,0.05);
+  position: sticky;
+  top: 0;
 }
 
 .sidebar button {
@@ -20,14 +23,22 @@ body {
   margin-bottom: 10px;
   background: transparent;
   color: white;
-  border: none;
+  border: 1px solid rgba(255,255,255,0.1);
+  padding: 10px;
+  border-radius: 6px;
   cursor: pointer;
+  transition: 0.2s;
+}
+
+.sidebar button:hover {
+  background: rgba(255,255,255,0.1);
 }
 
 /* MAIN */
 .main {
   flex: 1;
   padding: 30px;
+  overflow-x: hidden;
 }
 
 /* CARD */
@@ -38,6 +49,7 @@ body {
   border-radius: 10px;
 }
 
+/* CENTER */
 .center {
   text-align: center;
 }
@@ -47,12 +59,18 @@ input {
   width: 100%;
   padding: 10px;
   margin: 10px 0;
+  border-radius: 6px;
+  border: none;
+  outline: none;
+  box-sizing: border-box;
 }
 
 /* BUTTON */
 button {
   padding: 10px;
   cursor: pointer;
+  border-radius: 6px;
+  border: none;
 }
 
 .primary {
@@ -60,13 +78,18 @@ button {
   color: white;
 }
 
+.primary:hover {
+  background: #16a34a;
+}
+
 /* GRID */
 .grid {
   display: grid;
-  grid-template-columns: repeat(2,1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 20px;
 }
 
+/* STAT CARD */
 .stat-card {
   background: rgba(255,255,255,0.05);
   padding: 20px;
@@ -78,6 +101,8 @@ li {
   margin-top: 10px;
   padding: 10px;
   background: rgba(255,255,255,0.05);
+  border-radius: 6px;
+  list-style: none;
 }
 
 /* HIDDEN */
@@ -93,4 +118,5 @@ li {
   background: #22c55e;
   padding: 12px;
   border-radius: 8px;
+  z-index: 9999;
 }
