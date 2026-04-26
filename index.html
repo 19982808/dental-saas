@@ -6,17 +6,13 @@
 
 <title>Dental SaaS</title>
 
+<!-- PWA -->
 <link rel="manifest" href="/manifest.json">
 <link rel="icon" href="/icon.png">
 <meta name="theme-color" content="#0f172a">
 
 <link rel="stylesheet" href="/style.css">
 
-
-
-<!-- =========================
-     BASIC STYLES
-========================= -->
 <style>
 body {
   font-family: Arial, sans-serif;
@@ -26,7 +22,6 @@ body {
   margin: 0;
 }
 
-/* CARD */
 .card {
   background: #1e293b;
   padding: 20px;
@@ -34,7 +29,6 @@ body {
   margin-bottom: 20px;
 }
 
-/* INPUTS */
 input, button {
   padding: 10px;
   margin: 5px 0;
@@ -44,29 +38,29 @@ input, button {
   border: none;
 }
 
-/* BUTTON */
-button {
-  cursor: pointer;
-}
+button { cursor: pointer; }
 
-/* STATE */
-.hidden {
-  display: none;
-}
+.hidden { display: none; }
 
-/* SMALL UX IMPROVEMENT */
-button:hover {
-  opacity: 0.9;
+button:hover { opacity: 0.9; }
+
+/* LOADING STATE */
+#loading {
+  text-align: center;
+  margin-top: 100px;
+  opacity: 0.7;
 }
 </style>
+
 </head>
 
 <body>
 
-<!-- =========================
-     AUTH
-========================= -->
-<div id="authBox" class="card">
+<!-- LOADING (prevents blank screen confusion) -->
+<div id="loading">Loading app...</div>
+
+<!-- AUTH -->
+<div id="authBox" class="card hidden">
   <h2>Login / Register</h2>
 
   <input id="email" placeholder="Email">
@@ -76,9 +70,7 @@ button:hover {
   <button onclick="register()">Register</button>
 </div>
 
-<!-- =========================
-     DASHBOARD
-========================= -->
+<!-- DASHBOARD -->
 <div id="dashboard" class="hidden">
 
   <div class="card">
@@ -86,14 +78,12 @@ button:hover {
     <button onclick="logout()">Logout</button>
   </div>
 
-  <!-- STATS -->
   <div class="card">
     <h3>Stats</h3>
     <div id="statPatients">0</div>
     <div id="statAppointments">0</div>
   </div>
 
-  <!-- PATIENTS -->
   <div class="card">
     <h3>Patients</h3>
 
@@ -103,7 +93,6 @@ button:hover {
     <ul id="patientList"></ul>
   </div>
 
-  <!-- APPOINTMENTS -->
   <div class="card">
     <h3>Appointments</h3>
     <ul id="appointmentsList"></ul>
@@ -111,16 +100,11 @@ button:hover {
 
 </div>
 
-<!-- =========================
-     APP SCRIPT
-========================= -->
 <script type="module" src="/app.js"></script>
 
-<!-- =========================
-     SAFETY FALLBACK (prevents blank crash)
-========================= -->
+<!-- SAFE ERROR LOGGER -->
 <script>
-window.addEventListener("error", function (e) {
+window.addEventListener("error", (e) => {
   console.error("App error:", e.message);
 });
 </script>
