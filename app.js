@@ -19,13 +19,12 @@ document.addEventListener("DOMContentLoaded", boot);
    BOOT (FIXED - NO LOOPS)
 ========================= */
 async function boot() {
-  if (isBooting) return;
-  isBooting = true;
-
   try {
-    const { data } = await supabase.auth.getSession();
+    const { data, error } = await supabase.auth.getSession();
 
-    if (!data.session) {
+    document.getElementById("loading")?.remove();
+
+    if (error || !data?.session) {
       showAuth();
       return;
     }
@@ -41,16 +40,12 @@ async function boot() {
     showDashboard();
     await loadAll();
 
-    notify("Welcome back 👋");
-
   } catch (err) {
-    console.error(err);
-    alert(err.message);
-  } finally {
-    isBooting = false;
+    console.error("BOOT ERROR:", err);
+    document.getElementById("loading")?.remove();
+    showAuth();
   }
 }
-
 /* =========================
    UI SAFE TOGGLES
 ========================= */
