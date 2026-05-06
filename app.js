@@ -301,9 +301,3 @@ supabase.auth.onAuthStateChange((event) => {
   if (event === "SIGNED_IN") boot();
 });
 
-/* =========================
-   PWA
-========================= */
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/sw.js");
-}
